@@ -1,0 +1,119 @@
+# ============================================================================
+# Exemplos de Configuração Cron para Manutenção Automatizada Docker/Portainer
+# ============================================================================
+#
+# Para adicionar ao seu crontab:
+# 1. Execute: crontab -e
+# 2. Copie as linhas desejadas abaixo
+# 3. Ajuste os caminhos para o diretório correto
+# 4. Salve e saia
+#
+# Formato do crontab:
+# ┌───────────── minuto (0 - 59)
+# │ ┌───────────── hora (0 - 23)
+# │ │ ┌───────────── dia do mês (1 - 31)
+# │ │ │ ┌───────────── mês (1 - 12)
+# │ │ │ │ ┌───────────── dia da semana (0 - 6) (Domingo=0)
+# │ │ │ │ │
+# * * * * * comando a ser executado
+# ============================================================================
+
+# ATENÇÃO: Substitua /caminho/para/portainer-tool pelo caminho real no seu sistema!
+# Exemplo: /home/usuario/portainer-tool
+
+# ============================================================================
+# ANÁLISES DIÁRIAS
+# ============================================================================
+
+# Análise diária às 8h da manhã (salva relatório)
+0 8 * * * /caminho/para/portainer-tool/docker-disk-analyzer.sh > /var/log/docker-analysis-$(date +\%Y\%m\%d).log 2>&1
+
+# Monitoramento rápido a cada 6 horas
+0 */6 * * * /caminho/para/portainer-tool/docker-monitor.sh --once >> /var/log/docker-monitor.log 2>&1
+
+# ============================================================================
+# LIMPEZAS SEMANAIS
+# ============================================================================
+
+# Limpeza de logs toda segunda-feira às 2h da manhã
+0 2 * * 1 /caminho/para/portainer-tool/docker-log-cleanup.sh --size 100M >> /var/log/docker-log-cleanup.log 2>&1
+
+# Limpeza de containers parados todo domingo às 3h
+0 3 * * 0 /caminho/para/portainer-tool/docker-cleanup.sh --containers --force >> /var/log/docker-cleanup.log 2>&1
+
+# Manutenção completa semanal (domingo às 4h)
+0 4 * * 0 /caminho/para/portainer-tool/manutencao-semanal.sh
+
+# ============================================================================
+# LIMPEZAS MENSAIS
+# ============================================================================
+
+# Limpeza completa de imagens todo primeiro dia do mês às 2h
+0 2 1 * * /caminho/para/portainer-tool/docker-cleanup.sh --images --force >> /var/log/docker-cleanup-images.log 2>&1
+
+# Análise completa mensal (primeiro domingo do mês às 5h)
+0 5 1-7 * 0 /caminho/para/portainer-tool/docker-disk-analyzer.sh > /var/log/docker-analysis-monthly-$(date +\%Y\%m).log 2>&1
+
+# ============================================================================
+# CONFIGURAÇÃO CONSERVADORA (Recomendada para Produção)
+# ============================================================================
+
+# Análise diária sem fazer alterações
+0 8 * * * /caminho/para/portainer-tool/docker-monitor.sh --once >> /var/log/docker-monitor-daily.log 2>&1
+
+# Limpeza semanal apenas de logs muito grandes (500MB+)
+0 2 * * 1 /caminho/para/portainer-tool/docker-log-cleanup.sh --size 500M >> /var/log/docker-log-cleanup.log 2>&1
+
+# Limpeza mensal conservadora
+0 3 1 * * /caminho/para/portainer-tool/docker-cleanup.sh --containers --force >> /var/log/docker-cleanup.log 2>&1
+
+# ============================================================================
+# CONFIGURAÇÃO AGRESSIVA (Para ambientes de desenvolvimento)
+# ============================================================================
+
+# Limpeza de logs diária às 2h (logs > 50MB)
+0 2 * * * /caminho/para/portainer-tool/docker-log-cleanup.sh --size 50M >> /var/log/docker-log-cleanup.log 2>&1
+
+# Limpeza geral a cada 3 dias às 3h
+0 3 */3 * * /caminho/para/portainer-tool/docker-cleanup.sh --all --force >> /var/log/docker-cleanup-all.log 2>&1
+
+# Monitoramento a cada hora
+0 * * * * /caminho/para/portainer-tool/docker-monitor.sh --once >> /var/log/docker-monitor-hourly.log 2>&1
+
+# ============================================================================
+# ROTAÇÃO DE LOGS
+# ============================================================================
+
+# Limpa logs de análise mais antigos que 30 dias (todo dia às 5h)
+0 5 * * * find /var/log/docker-*.log -type f -mtime +30 -delete
+
+# ============================================================================
+# ALERTAS POR EMAIL (Requer mailutils instalado)
+# ============================================================================
+
+# Envia relatório semanal por email
+0 9 * * 1 /caminho/para/portainer-tool/manutencao-semanal.sh && cat ~/docker-maintenance-logs/manutencao-*.log | tail -100 | mail -s "Relatório Semanal Docker" seu-email@example.com
+
+# Alerta se uso de disco > 80%
+*/30 * * * * df -h / | awk 'NR==2 {if (int($5) > 80) print "ALERTA: Disco em " $5}' | grep ALERTA | mail -s "Alerta de Disco" seu-email@example.com
+
+# ============================================================================
+# DICAS IMPORTANTES
+# ============================================================================
+#
+# 1. Teste os scripts manualmente antes de adicionar ao cron
+# 2. Sempre redirecione output para logs (>> /var/log/arquivo.log 2>&1)
+# 3. Use caminhos absolutos (não relativos)
+# 4. Considere o horário de menor movimento para manutenções
+# 5. Configure notificações para falhas críticas
+# 6. Mantenha backups antes de limpezas automáticas
+# 7. Revise logs regularmente para verificar execuções
+# 8. Ajuste frequências conforme necessidade do seu ambiente
+#
+# Para verificar se o cron está funcionando:
+#   - Verifique os logs: tail -f /var/log/syslog | grep CRON
+#   - Liste jobs ativos: crontab -l
+#   - Teste manualmente antes: /caminho/para/script.sh
+#
+# ============================================================================
+

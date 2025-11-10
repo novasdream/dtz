@@ -1,0 +1,67 @@
+# ============================================================================
+# Arquivo de Exemplo: Lista de Servidores
+# ============================================================================
+#
+# Use este arquivo com remote-exec.sh ou remote-deploy.sh
+#
+# Formato:
+#   - Um host por linha
+#   - Linhas começando com # são comentários
+#   - Linhas vazias são ignoradas
+#   - Pode usar IP ou hostname
+#
+# Uso:
+#   ./remote-exec.sh -f servers.txt analyze
+#   ./remote-deploy.sh -f servers.txt
+#
+# ============================================================================
+
+# Servidores de Produção
+192.168.1.100
+192.168.1.101
+192.168.1.102
+
+# Servidores de Staging
+#staging1.example.com
+#staging2.example.com
+
+# Servidores de Desenvolvimento
+#dev1.example.com
+#dev2.example.com
+
+# Servidores por Nome
+#prod-web-01.example.com
+#prod-web-02.example.com
+#prod-db-01.example.com
+
+# Servidores Cloud
+#ec2-xxx-xxx-xxx-xxx.compute.amazonaws.com
+#instance-1.us-central1-a.c.project.internal
+
+# ============================================================================
+# DICAS:
+# ============================================================================
+#
+# 1. Mantenha arquivos separados por ambiente:
+#    - servers-prod.txt
+#    - servers-staging.txt
+#    - servers-dev.txt
+#
+# 2. Use grupos temáticos:
+#    - servers-web.txt
+#    - servers-db.txt
+#    - servers-app.txt
+#
+# 3. Documente cada servidor:
+#    # Web Server 1 - Nginx + PHP
+#    192.168.1.100
+#    
+#    # Database Server - PostgreSQL
+#    192.168.1.101
+#
+# 4. Use controle de versão para rastrear mudanças
+#
+# 5. Nunca commite credenciais ou chaves SSH!
+#
+# ============================================================================
+

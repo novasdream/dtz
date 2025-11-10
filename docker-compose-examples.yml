@@ -1,0 +1,336 @@
+# ============================================================================
+# Exemplos de Configuração Docker Compose com Limites de Log
+# ============================================================================
+#
+# Este arquivo contém exemplos de como configurar limites de log em seus
+# serviços Docker Compose para prevenir problemas de armazenamento.
+#
+# ATENÇÃO: Este é apenas um arquivo de exemplos. Copie as configurações
+# relevantes para seus próprios arquivos docker-compose.yml
+#
+# ============================================================================
+
+version: '3.8'
+
+# ============================================================================
+# EXEMPLO 1: Configuração Básica de Logs
+# ============================================================================
+
+services:
+  app-exemplo-basico:
+    image: nginx:latest
+    container_name: nginx-basico
+    # Configuração de logs recomendada
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"      # Cada arquivo de log terá no máximo 10MB
+        max-file: "3"        # Mantém no máximo 3 arquivos (total: 30MB)
+    ports:
+      - "8080:80"
+
+# ============================================================================
+# EXEMPLO 2: Configuração Conservadora (Menos Logs)
+# ============================================================================
+
+  app-conservador:
+    image: nginx:latest
+    container_name: nginx-conservador
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"       # Arquivos menores
+        max-file: "2"        # Menos arquivos mantidos
+    ports:
+      - "8081:80"
+
+# ============================================================================
+# EXEMPLO 3: Configuração Generosa (Mais Logs)
+# ============================================================================
+
+  app-generoso:
+    image: nginx:latest
+    container_name: nginx-generoso
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"      # Arquivos maiores
+        max-file: "5"        # Mais arquivos mantidos (total: 250MB)
+    ports:
+      - "8082:80"
+
+# ============================================================================
+# EXEMPLO 4: Portainer com Limites de Log
+# ============================================================================
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "portainer"  # Label para identificação
+    ports:
+      - "9000:9000"
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+# ============================================================================
+# EXEMPLO 5: Aplicação com Logs Detalhados (Desenvolvimento)
+# ============================================================================
+
+  app-desenvolvimento:
+    image: node:16
+    container_name: node-dev
+    # Para desenvolvimento, podemos ser mais generosos
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"     # Logs grandes para debug
+        max-file: "5"        # Mantém mais histórico
+        compress: "true"     # Comprime logs antigos
+    command: npm run dev
+    volumes:
+      - ./app:/usr/src/app
+
+# ============================================================================
+# EXEMPLO 6: Aplicação com Logs Mínimos (Produção)
+# ============================================================================
+
+  app-producao:
+    image: node:16
+    container_name: node-prod
+    # Para produção, logs mínimos (use sistema externo de logs)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+        labels: "production"
+        env: "prod"
+    command: npm start
+    volumes:
+      - ./app:/usr/src/app
+
+# ============================================================================
+# EXEMPLO 7: Banco de Dados com Limites
+# ============================================================================
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"      # BDs podem gerar mais logs
+        max-file: "3"
+    environment:
+      MYSQL_ROOT_PASSWORD: exemplo
+      MYSQL_DATABASE: meudb
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+# ============================================================================
+# EXEMPLO 8: Redis com Configuração Mínima
+# ============================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"       # Redis gera poucos logs
+        max-file: "2"
+    ports:
+      - "6379:6379"
+
+# ============================================================================
+# EXEMPLO 9: Logging com Syslog (Alternativa)
+# ============================================================================
+
+  app-syslog:
+    image: nginx:latest
+    container_name: nginx-syslog
+    # Usa syslog em vez de json-file
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://192.168.1.100:514"
+        tag: "nginx-app"
+    ports:
+      - "8083:80"
+
+# ============================================================================
+# EXEMPLO 10: Logging com Gelf (Graylog)
+# ============================================================================
+
+  app-gelf:
+    image: nginx:latest
+    container_name: nginx-gelf
+    # Envia logs para Graylog
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://192.168.1.100:12201"
+        tag: "nginx-app"
+    ports:
+      - "8084:80"
+
+# ============================================================================
+# EXEMPLO 11: Stack Completa com Logs Configurados
+# ============================================================================
+
+  # Frontend
+  frontend:
+    image: nginx:alpine
+    container_name: frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  # Backend
+  backend:
+    image: node:16-alpine
+    container_name: backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+
+  # Database
+  database:
+    image: postgres:14
+    container_name: postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    environment:
+      POSTGRES_PASSWORD: exemplo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+# ============================================================================
+# EXEMPLO 12: Configuração Global (para todos os serviços)
+# ============================================================================
+
+# Você pode definir uma configuração padrão usando x-logging
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  app1:
+    image: nginx
+    logging: *default-logging
+
+  app2:
+    image: nginx
+    logging: *default-logging
+
+  app3:
+    image: nginx
+    # Sobrescreve o padrão para este serviço
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+# ============================================================================
+# Volumes (para os exemplos acima)
+# ============================================================================
+
+volumes:
+  portainer_data:
+  mysql_data:
+  postgres_data:
+
+# ============================================================================
+# TABELA DE REFERÊNCIA - Drivers de Log Disponíveis
+# ============================================================================
+#
+# Driver        | Descrição                              | Caso de Uso
+# --------------|----------------------------------------|---------------------------
+# json-file     | Padrão, armazena como JSON            | Geral, simples
+# syslog        | Envia para syslog                     | Integração com syslog
+# journald      | Envia para journald (systemd)         | Linux com systemd
+# gelf          | Graylog Extended Log Format           | Graylog
+# fluentd       | Envia para Fluentd                    | Stack EFK
+# awslogs       | Amazon CloudWatch Logs                | AWS
+# gcplogs       | Google Cloud Logging                  | GCP
+# splunk        | Splunk logging                        | Splunk
+# logentries    | Rapid7 Logentries                     | Logentries
+# none          | Desabilita logs completamente         | Não usar em produção
+#
+# ============================================================================
+
+# ============================================================================
+# RECOMENDAÇÕES POR TIPO DE APLICAÇÃO
+# ============================================================================
+#
+# Tipo                  | max-size | max-file | Total
+# ----------------------|----------|----------|--------
+# Serviços leves        | 5m       | 2        | 10MB
+# Aplicações padrão     | 10m      | 3        | 30MB
+# Bancos de dados       | 20m      | 3        | 60MB
+# Apps com logs densos  | 50m      | 5        | 250MB
+# Desenvolvimento       | 100m     | 5        | 500MB
+#
+# ============================================================================
+
+# ============================================================================
+# DICAS IMPORTANTES
+# ============================================================================
+#
+# 1. SEMPRE configure limites de log em produção
+# 2. Ajuste os valores conforme a necessidade da aplicação
+# 3. Para logs importantes, use sistemas externos (ELK, Graylog, etc)
+# 4. Monitore regularmente o uso de disco
+# 5. Considere usar compress: "true" para logs antigos
+# 6. Em desenvolvimento, pode ser mais generoso
+# 7. Em produção, seja conservador
+# 8. Teste as configurações antes de aplicar em produção
+# 9. Documente as razões das configurações escolhidas
+# 10. Revise periodicamente se os limites ainda são adequados
+#
+# ============================================================================
+
+# ============================================================================
+# COMO APLICAR ESTAS CONFIGURAÇÕES
+# ============================================================================
+#
+# 1. Copie a seção de logging relevante
+# 2. Cole no seu docker-compose.yml
+# 3. Ajuste max-size e max-file conforme necessário
+# 4. Recrie os containers:
+#
+#    docker-compose down
+#    docker-compose up -d
+#
+# 5. Verifique se está funcionando:
+#
+#    docker inspect nome-do-container | grep -A 10 LogConfig
+#
+# ============================================================================
+
