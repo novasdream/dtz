@@ -412,3 +412,4 @@ TIPS
 
 echo "Exemplos carregados! Ajuste as variáveis e execute os comandos."
 
+

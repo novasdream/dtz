@@ -132,3 +132,4 @@ echo ""
 echo -e "Relatório: ${YELLOW}$REPORT_FILE${NC}"
 echo ""
 
+

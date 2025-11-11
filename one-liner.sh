@@ -227,3 +227,4 @@ echo "Comando desconhecido: $1" >&2
 echo "Use: $0 help" >&2
 exit 1
 
+

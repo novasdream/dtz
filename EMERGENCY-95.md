@@ -365,3 +365,4 @@ sudo du -h --max-depth=1 / 2>/dev/null | sort -rh | head -10
 
 *Depois de resolver, não esqueça de configurar a prevenção para isso não acontecer de novo.*
 
+
